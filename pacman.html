@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<title>Pacman!</title>
+	<script type="text/javascript" src="prototype.js"></script>
+	<script type="text/javascript" src="underscore.js"></script>
+	<script type="text/javascript" src="kibo.js"></script>
+	<script type="text/javascript">
+		
+		var k = new Kibo();
+
+		var pacman = {
+			x : 0,
+			y : 24,
+			width : 13,
+			height : 13
+		};
+
+		var ghost = {
+			x : 286,
+			y : 24,
+			width : 14,
+			height : 14
+		};
+
+		var Food = Class.create({
+			initialize : function (x, y) {
+				this.x = x;
+				this.y = y;
+				this.width = 2;
+				this.height = 2;
+			} 
+		});
+		
+		var food = [];
+		for(var i = 3;i<18;i++)
+		{
+			food.push(new Food(8, i*10));
+			food.push(new Food(292, i*10));
+		}
+		for(var i = 2;i<29;i++)
+		{
+			food.push(new Food(i*10, 30));
+			food.push(new Food(i*10, 170));
+		}
+		for(var i=4; i<18;i++)
+		{
+			if(i<9 || i>11)
+			{	
+				food.push(new Food(51, i*10));
+				food.push(new Food(250, i*10));
+			}
+		}
+		for(var i= 6; i<25;i++)
+		{
+			if(i<10 || i>20)
+			{
+				food.push(new Food(i*10, 80));
+				food.push(new Food(i*10, 120));
+			}
+		}
+		for(var i = 6;i<25;i++)
+		{
+			if(i<10 || i>20)
+			{
+				food.push(new Food(i*10, 10));
+				food.push(new Food(i*10, 190));
+			}	
+		}
+		for(var i = 9;i<12;i++)
+		{
+			food.push(new Food(90, i*10));
+			food.push(new Food(210, i*10));
+		}
+		food.push(new Food(60, 20));
+		food.push(new Food(90, 20));
+		food.push(new Food(210, 20));
+		food.push(new Food(240, 20));
+		food.push(new Food(60, 180));
+		food.push(new Food(90, 180));
+		food.push(new Food(210, 180));
+		food.push(new Food(240, 180));
+
+		pacman.close = new Image();
+		ghost.w = new Image();
+		ghost.s = new Image();
+		ghost.d = new Image();
+		ghost.a = new Image();
+		pacman.up = new Image();
+		pacman.down = new Image();
+		pacman.righty = new Image();
+		pacman.lefty = new Image();
+		ghost.currentsrc = new Image();
+		pacman.currentsrc = new Image();
+		G = new Image();
+		A = new Image();
+		M = new Image();
+		E = new Image();
+		O = new Image();
+		V = new Image();
+		R = new Image();
+
+		var speed = 9;
+		var ghostspeed = 12;
+		pacman.direction = 'right';
+		ghost.direction = 'a';
+		var gameOver = false;
+
+		function init() {
+			ghost.w.src = "assets/ghostup.png";
+			ghost.s.src = "assets/ghostdown.png";
+			ghost.d.src = "assets/ghostright.png";
+			ghost.a.src = "assets/ghostleft.png";
+			ghost.currentsrc.src = ghost.a.src;
+
+			pacman.up.src = "assets/pacmanup.png";
+			pacman.down.src = "assets/pacmandown.png";
+			pacman.lefty.src = "assets/pacmanleft.png";
+			pacman.righty.src = "assets/pacmanright.png";
+			pacman.close.src = "assets/closed.png";
+			pacman.currentsrc.src = pacman.righty.src;
+
+			G.src = "assets/G.png";
+			A.src = "assets/A.png";
+			M.src = "assets/M.png";
+			E.src = "assets/E.png";
+			O.src = "assets/O.png";
+			V.src = "assets/V.png";
+			R.src = "assets/R.png";
+
+			setInterval(draw, 150);
+		}
+
+		function draw () {
+			var cvs = document.getElementById('pacman');
+			var ctx = cvs.getContext('2d');
+			ctx.fillStyle = "black";
+			ctx.fillRect(0,0,400,300);
+			
+			ctx.strokeStyle = "blue";
+			ctx.lineWidth = 2;
+
+			if(gameOver)
+			{
+				ctx.drawImage(G, 100, 100);
+				ctx.drawImage(A, 110, 100);
+				ctx.drawImage(M, 120, 100);
+				ctx.drawImage(E, 130, 100);
+				ctx.drawImage(O, 150, 100);
+				ctx.drawImage(V, 160, 100);
+				ctx.drawImage(E, 170, 100);
+				ctx.drawImage(R, 180, 100);
+			}
+			else
+			{
+			roundedRect(ctx, 100, 40, 100, 120, 5);
+			roundedRect(ctx, 100, 180, 100, 20, 5);
+			roundedRect(ctx, 100, 0, 100, 20, 5);
+			roundedRect(ctx, 0, 0, 50, 20, 5);
+			roundedRect(ctx, 250, 0, 50, 20, 5);
+			roundedRect(ctx, 0, 180, 50, 20, 5);
+			roundedRect(ctx, 250, 180, 50, 20, 5);
+			roundedRect(ctx, 60, 40, 30, 30, 5);
+			roundedRect(ctx, 60, 130, 30, 30, 5);
+			roundedRect(ctx, 210, 40, 30, 30, 5);
+			roundedRect(ctx, 210, 130, 30, 30, 5);
+			// 2 obstacles - lineTo
+			ctx.beginPath();
+			ctx.moveTo(280, 40);
+			ctx.lineTo(280, 160);
+			ctx.moveTo(260, 160);
+			ctx.lineTo(260, 110);
+			ctx.moveTo(260, 90);
+			ctx.lineTo(260, 40);
+			ctx.moveTo(220, 90);
+			ctx.lineTo(260, 90);
+			ctx.moveTo(220, 110);
+			ctx.lineTo(260, 110);
+			ctx.moveTo(20, 40);
+			ctx.lineTo(20, 160);
+			ctx.moveTo(40, 40);
+			ctx.lineTo(40, 90);
+			ctx.lineTo(80, 90);
+			ctx.moveTo(80, 110);
+			ctx.lineTo(40, 110);
+			ctx.lineTo(40, 160);
+			ctx.lineTo(20, 160);
+			ctx.moveTo(20, 40);
+			ctx.lineTo(40, 40);
+			ctx.moveTo(80, 90);
+			ctx.lineTo(80, 110);
+			ctx.moveTo(280, 40);
+			ctx.lineTo(260, 40);
+			ctx.moveTo(220, 90);
+			ctx.lineTo(220, 110);
+			ctx.moveTo(260, 160);
+			ctx.lineTo(280, 160);	
+			ctx.stroke();
+			ctx.closePath();	
+				
+			ctx.fillStyle = "white";
+			for(var i = 0;i<food.length;i++)
+				ctx.fillRect(food[i].x, food[i].y, food[i].width, food[i].height);
+			ctx.save();
+
+			// Let user do keyboard event handling.
+
+			k.down(['up', 'down', 'left', 'right'], function () {
+				pacman.direction = k.lastKey();
+			});
+
+			switch(pacman.direction) {
+				case 'up':
+					pacman.y -= speed;
+					pacman.currentsrc = pacman.up;
+					break;
+				case 'down':
+					pacman.y += speed;
+					pacman.currentsrc = pacman.down;
+					break;
+				case 'right':
+					pacman.x += speed;
+					pacman.currentsrc = pacman.righty;
+					break;
+				case 'left':
+					pacman.x -= speed;
+					pacman.currentsrc = pacman.lefty;
+					break;
+			}
+
+			k.down(['w', 'a', 's', 'd'], function(){
+				ghost.direction = k.lastKey();
+			});
+
+			switch(ghost.direction){
+				case 'w':
+					ghost.y -= ghostspeed;
+					ghost.currentsrc = ghost.w;
+					break;
+				case 'a':
+					ghost.x -= ghostspeed;
+					ghost.currentsrc = ghost.a;
+					break;
+				case 'd':
+					ghost.x += ghostspeed;
+					ghost.currentsrc = ghost.d;
+					break;
+				case 's':
+					ghost.y += ghostspeed;
+					ghost.currentsrc = ghost.s;
+					break;
+			}
+
+			boundCheck(pacman);
+			boundCheck(ghost);
+			booAway(ctx);
+			pacAway(ctx);
+			ctx.restore();
+		}
+		}
+		
+		function boundCheck(obj){
+			if(obj.x >= 0 && obj.y >= 0 && obj.x<= 300 - obj.width && obj.y <= 200 - obj.height)  	
+			{	
+				xCond = (obj.x >= 0 && obj.x <= 50) || obj.x > 250 - obj.width;
+				yCond = (obj.y >= 0 && obj.y <= 20) || obj.y > 180 - obj.height;
+
+				if(xCond && yCond)
+				{
+
+					switch(obj.direction) {
+						case 'up':
+							obj.y = 20 + 4;  
+							break;
+						case 'left':
+							obj.x = 50 + 4;
+							break;
+						case 'right':
+							obj.x = 250 - obj.width - 2;
+							break;
+						case 'down':
+							obj.y = 180 - obj.height - 2;
+							break;
+
+						case 'w':
+							obj.y = 20 + 4;  
+							break;
+						case 'a':
+							obj.x = 50 + 4;
+							break;
+						case 'd':
+							obj.x = 250 - obj.width - 2;
+							break;
+						case 's':
+							obj.y = 180 - obj.height - 2;
+							break;
+					}
+				}
+
+				xCond = obj.x >= 100 - obj.width && obj.x <= 200 ;
+				yCond = (obj.y >= 0 && obj.y <= 20) || (obj.y >= 180 - obj.height && obj.y <= 200 - obj.height);
+
+				if(xCond && yCond)
+				{
+					switch(obj.direction){
+						case 'up':
+							obj.y = 20 + 4;
+							break;
+						case 'left':
+							obj.x = 200 + 4;
+							break;
+						case 'right':
+							obj.x = 100 - obj.width - 2;
+							break;
+						case 'down':
+							obj.y = 180 - obj.height - 2;
+							break;
+
+						case 'w':
+							obj.y = 20 + 4;
+							break;
+						case 'a':
+							obj.x = 200 + 4;
+							break;
+						case 'd':
+							obj.x = 100 - obj.width - 2;
+							break;
+						case 's':
+							obj.y = 180 - obj.height - 2;
+							break;
+					}
+				}
+
+				xCond = obj.x >= 100 - obj.width && obj.x <= 200;
+				yCond = obj.y >= 40 - obj.height && obj.y <= 160;
+				if(xCond && yCond)
+				{
+					switch(obj.direction){
+						case 'up':
+							obj.y = 160 + 4;
+							break;
+						case 'down':
+							obj.y = 40 - obj.height - 2;
+							break;
+						case 'right':
+							obj.x = 100 - obj.width - 2;
+							break;
+						case 'left':
+							obj.x = 200 + 4;
+							break;
+
+						case 'w':
+							obj.y = 160 + 4;
+							break;
+						case 's':
+							obj.y = 40 - obj.height - 2;
+							break;
+						case 'd':
+							obj.x = 100 - obj.width - 2;
+							break;
+						case 'a':
+							obj.x = 200 + 4;
+							break;
+					}
+				}
+
+				xCond1 = obj.x >= 60 - obj.width && obj.x <= 100;
+				xCond2 = obj.x >= 200 && obj.x <= 240;
+				yCond1 = obj.y >= 40 - obj.height && obj.y <= 70;
+				yCond2 = obj.y >= 130 - obj.height && obj.y <= 160;
+
+				if((xCond1 || xCond2) && (yCond1 || yCond2))
+				{
+					switch(obj.direction){
+						case 'up':
+							if(yCond1)
+							{	
+								obj.y = 70 + 4;
+								break;
+							}
+							else if(yCond2)
+							{	
+								obj.y = 160 + 4;
+								break;
+							}
+						case 'down':
+							if(yCond1)
+							{
+								obj.y = 40 - obj.height - 2;
+								break;
+							}
+							else if(yCond2)
+							{
+								obj.y = 130 - obj.height - 2;
+								break;
+							}
+						case 'right':
+							obj.x = 60 - obj.width - 2;
+							break;
+						case 'left':
+							obj.x = 240 + 4;
+							break;
+
+						case 'w':
+							if(yCond1)
+							{	
+								obj.y = 70 + 4;
+								break;
+							}
+							else if(yCond2)
+							{	
+								obj.y = 160 + 4;
+								break;
+							}
+						case 's':
+							if(yCond1)
+							{
+								obj.y = 40 - obj.height - 2;
+								break;
+							}
+							else if(yCond2)
+							{
+								obj.y = 130 - obj.height - 2;
+								break;
+							}
+						case 'd':
+							obj.x = 60 - obj.width - 2;
+							break;
+						case 'a':
+							obj.x = 240 + 4;
+							break;
+					}
+				}
+
+				xCond1 = obj.x >= 20 - obj.width && obj.x <= 40;
+				xCond2 = obj.x > 40 && obj.x <= 80;
+				xCond3 = obj.x >= 260 - obj.width && obj.x <= 280;
+				xCond4 = obj.x >= 220 - obj.width && obj.x < 260;
+
+				yCond1 = (obj.y >= 40 - obj.height && obj.y <= 90 - obj.height) || (obj.y >= 110 && obj.y <= 160);
+				yCond2 = obj.y >= 90 - obj.height && obj.y <= 110;
+
+				if((xCond1 || xCond2 || xCond3 || xCond4) || (yCond1 || yCond2))
+				{
+					switch(obj.direction){
+						case 'up':
+							if((xCond1 || xCond3) && yCond1)
+							{
+								obj.y = 160 + 4;
+								break;
+							}
+							else if((xCond2 || xCond4) && yCond2)
+							{
+								obj.y = 110 + 4;
+								break;
+							}
+						case 'down':
+							if((xCond1 || xCond3) && yCond1)
+							{
+								obj.y = 40 - obj.height - 2;
+								break;
+							}
+							else if((xCond2 || xCond4) && yCond2)
+							{
+								obj.y = 90 - obj.height - 2;
+								break;
+							}
+						case 'right':
+							if(xCond1 && (yCond1 || yCond2))
+							{
+								obj.x = 20 - obj.width - 2;
+								break;
+							}
+							else if(xCond3 && yCond1)
+							{
+								obj.x = 260 - obj.width - 2;
+								break;
+							}
+							else if(xCond4 && yCond2)
+							{
+								obj.x = 220 - obj.width - 2;
+								break;
+							}
+						case 'left':
+							if(xCond3 && (yCond1 || yCond2))
+							{
+								obj.x = 280 + 4;
+								break;
+							}
+							else if(xCond2 && yCond2)
+							{
+								obj.x = 80 + 4;
+								break;
+							}
+							else if(xCond1 && yCond1)
+							{
+								obj.x = 40 + 4;
+								break;
+							}
+
+						case 'w':
+							if((xCond1 || xCond3) && yCond1)
+							{
+								obj.y = 160 + 4;
+								break;
+							}
+							else if((xCond2 || xCond4) && yCond2)
+							{
+								obj.y = 110 + 4;
+								break;
+							}
+						case 's':
+							if((xCond1 || xCond3) && yCond1)
+							{
+								obj.y = 40 - obj.height - 2;
+								break;
+							}
+							else if((xCond2 || xCond4) && yCond2)
+							{
+								obj.y = 90 - obj.height - 2;
+								break;
+							}
+						case 'd':
+							if(xCond1 && (yCond1 || yCond2))
+							{
+								obj.x = 20 - obj.width - 2;
+								break;
+							}
+							else if(xCond3 && yCond1)
+							{
+								obj.x = 260 - obj.width - 2;
+								break;
+							}
+							else if(xCond4 && yCond2)
+							{
+								obj.x = 220 - obj.width - 2;
+								break;
+							}
+						case 'a':
+							if(xCond3 && (yCond1 || yCond2))
+							{
+								obj.x = 280 + 4;
+								break;
+							}
+							else if(xCond2 && yCond2)
+							{
+								obj.x = 80 + 4;
+								break;
+							}
+							else if(xCond1 && yCond1)
+							{
+								obj.x = 40 + 4;
+								break;
+							}
+					}
+				}
+			}
+			else
+			{
+				if(obj.x < 0)
+					obj.x = 0;
+				else if(obj.x > 300 - obj.width)
+					obj.x = 300 - obj.width;
+				else if(obj.y < 0)
+					obj.y = 0;
+				else if(obj.y > 200 - obj.height)
+					obj.y = 200 - obj.height;
+			}
+		}
+
+		function booAway(ctx) {
+			ctx.drawImage(ghost.currentsrc, ghost.x, ghost.y);
+		}
+
+		function pacAway(ctx) {
+			var pacmanInGhost = ((pacman.x >= ghost.x && pacman.x <= ghost.x + ghost.width) 
+								&& (pacman.y >= ghost.y && pacman.y <= ghost.y + ghost.height))
+			var ghostInPacman = ((ghost.x >= pacman.x && ghost.x <= pacman.x + pacman.width) 
+								&& (ghost.y >= pacman.y && ghost.y <= pacman.y + pacman.height))
+			if(open)
+			{
+				ctx.drawImage(pacman.currentsrc, pacman.x, pacman.y);
+				if(pacmanInGhost || ghostInPacman)
+					gameOver = true;
+				open = false;
+			}
+			else
+			{
+				ctx.drawImage(pacman.close, pacman.x, pacman.y);
+				for(var i = 0; i < food.length; i++)
+				{
+					if((food[i].x >= pacman.x && food[i].x <= pacman.x + pacman.width) && (food[i].y >= pacman.y && food[i].y <= pacman.y + pacman.height))
+					{
+						food[i].x = -5;
+						food[i].y = -5;
+					}
+				}
+				
+				open = true;
+			}
+		}
+
+		function roundedRect(ctx,x,y,width,height,radius){
+			ctx.beginPath();
+			ctx.moveTo(x,y+radius);
+			ctx.lineTo(x,y+height-radius);
+			ctx.quadraticCurveTo(x,y+height,x+radius,y+height);
+			ctx.lineTo(x+width-radius,y+height);
+			ctx.quadraticCurveTo(x+width,y+height,x+width,y+height-radius);
+			ctx.lineTo(x+width,y+radius);
+			ctx.quadraticCurveTo(x+width,y,x+width-radius,y);
+			ctx.lineTo(x+radius,y);
+			ctx.quadraticCurveTo(x,y,x,y+radius);
+			ctx.stroke();
+			ctx.closePath();
+		}
+	</script>
+	<style ="text/css">
+		canvas {border : 1px solid blue;}
+	</style>
+</head>
+
+<body onload="init();">
+	<canvas id="pacman" width="300" height="200"></canvas>
+</body>
+
+</html>

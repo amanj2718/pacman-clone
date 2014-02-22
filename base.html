@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<title>Base HTML file</title>
+	<style type="text/css">
+		canvas {border : 1px solid blue;}
+	</style>
+	<script type="text/javascript" src="kibo.js"></script>
+	<script type="text/javascript" src="prototype.js"></script>
+	<script type="text/javascript">
+
+		var k = new Kibo();
+
+		var pacman = {
+			x : 10,
+			y : 30,
+			width : 12,
+			height : 13,
+			centerX : this.x + (this.width/2),
+			centerY : this.y + (this.height/2),
+			rotation : 0
+		};
+
+		var ghost = {
+			x : 190,
+			y : 30,
+			width : 14,
+			height : 14,
+			centerX : this.x + (this.width/2),
+			centerY : this.y + (this.height/2),
+			leftsrc : "assets/ghostleft.png",
+			rightsrc : "assets/ghostright.png",
+			upsrc : "assets/ghostup.png",
+			downsrc : "assets/ghostdown.png",
+		};
+
+		var Food = Class.create({
+			initialize : function (x, y) {
+				this.x = x;
+				this.y = y;
+				this.width = 2;
+				this.height = 2;
+			} 
+		});
+		
+		var food = [];
+		for(var i = 3;i<18;i++)
+		{
+			food.push(new Food(8, i*10));
+			food.push(new Food(292, i*10));
+		}
+		for(var i = 2;i<29;i++)
+		{
+			food.push(new Food(i*10, 30));
+			food.push(new Food(i*10, 170));
+		}
+		for(var i=4; i<18;i++)
+		{
+			if(i<9 || i>11)
+			{	
+				food.push(new Food(51, i*10));
+				food.push(new Food(250, i*10));
+			}
+		}
+		for(var i= 6; i<25;i++)
+		{
+			if(i<10 || i>20)
+			{
+				food.push(new Food(i*10, 80));
+				food.push(new Food(i*10, 120));
+			}
+		}
+		for(var i = 6;i<25;i++)
+		{
+			if(i<10 || i>20)
+			{
+				food.push(new Food(i*10, 10));
+				food.push(new Food(i*10, 190));
+			}	
+		}
+		for(var i = 9;i<12;i++)
+		{
+			food.push(new Food(90, i*10));
+			food.push(new Food(210, i*10));
+		}
+		food.push(new Food(60, 20));
+		food.push(new Food(90, 20));
+		food.push(new Food(210, 20));
+		food.push(new Food(240, 20));
+		food.push(new Food(60, 180));
+		food.push(new Food(90, 180));
+		food.push(new Food(210, 180));
+		food.push(new Food(240, 180));
+
+		//var bounds = {leftBound : 0, rightBound: 300, upBound : 0, downBound : 200};
+		pacman.open = new Image();
+		pacman.close = new Image();                           
+		var speed = 10;
+		//var direction = 'right';
+
+		function init(){
+			// complete this, they need img src
+		}
+
+		function draw() {
+			/* 
+			The document object is available once the page loads completely. The document object gives us access to functions that are extensively used to create new elements, add them to the page, selecting existing tags and manipulating them, for example, change text content inside tags, changing their attributes, etc.
+			*/
+			
+			var cvs = document.getElementById('canvas');          // cvs stands for canvas, ctx for context       
+			var ctx = cvs.getContext('2d');                      // We need to grab hold of the 2d drawing surface, the other option is 3d
+
+			/* There are two methods - fill and style, for filling regions and drawing their outline respectively. fillStyle and strokeStyle are used to assign colors for the above functions. Similar to these, there are many more global style functions, one example is lineWidth.*/
+
+			ctx.fillStyle = "black";
+			ctx.fillRect(0,0,400,300);                           
+			ctx.strokeStyle = "blue"; 
+			ctx.lineWidth = 3;
+
+			/* The canvas has a coordinate system which has its origin at the top left corner. To draw any shape from scratch, we have the following functions -> moveTo(x, y) - moves pen to x,y without stroking
+								   lineTo(x,y) - strokes a line from the current pen position to x,y
+								   arc(centerx, centery, radius, startAngle, endAngle, isClockwise) - note that drawing starts from current pen
+								   																	  pen position.
+			
+			There are more functions like quadraticCurveTo and bezierCurveTo, try and find out their syntax and draw a few shapes using them to understand how they look.
+			The beginPath-closePath block is a way to organize the custom shapes you draw.
+			*/
+
+			ctx.beginPath();
+			ctx.moveTo(280, 40);
+			ctx.lineTo(280, 160);
+			ctx.moveTo(260, 160);
+			ctx.lineTo(260, 110);
+			ctx.moveTo(260, 90);
+			ctx.lineTo(260, 40);
+			ctx.moveTo(220, 90);
+			ctx.lineTo(260, 90);
+			ctx.moveTo(220, 110);
+			ctx.lineTo(260, 110);
+			ctx.moveTo(20, 40);
+			ctx.lineTo(20, 160);
+			ctx.moveTo(40, 40);
+			ctx.lineTo(40, 90);
+			ctx.lineTo(80, 90);
+			ctx.moveTo(80, 110);
+			ctx.lineTo(40, 110);
+			ctx.lineTo(40, 160);
+			ctx.lineTo(20, 160);
+			ctx.moveTo(20, 40);
+			ctx.lineTo(40, 40);
+			ctx.moveTo(80, 90);
+			ctx.lineTo(80, 110);
+			ctx.moveTo(280, 40);
+			ctx.lineTo(260, 40);
+			ctx.moveTo(220, 90);
+			ctx.lineTo(220, 110);
+			ctx.moveTo(260, 160);
+			ctx.lineTo(280, 160);	
+			ctx.stroke();
+			ctx.closePath();
+
+
+			roundedRect(ctx, 100, 40, 100, 120, 5);
+			roundedRect(ctx, 100, 180, 100, 20, 5);
+			roundedRect(ctx, 100, 0, 100, 20, 5);
+			roundedRect(ctx, 0, 0, 50, 20, 5);
+			roundedRect(ctx, 250, 0, 50, 20, 5);
+			roundedRect(ctx, 0, 180, 50, 20, 5);
+			roundedRect(ctx, 250, 180, 50, 20, 5);	
+			
+			ctx.fillStyle = "white";
+			// they write this part.
+			for(var i = 0;i<food.length;i++)
+				ctx.fillRect(food[i].x, food[i].y, food[i].width, food[i].height);
+			ctx.save();
+
+			// handle keyboard events. give link to github file.
+
+			ctx.restore();
+		}
+
+			/* PACAWAY CODE HERE 
+			Just understand animation and this should work.
+			*/
+
+			// helper methods
+			function drawRotatedImage(context, image, x, y, angle) { 
+			 	var TO_RADIANS = Math.PI/180;
+				// save the current co-ordinate system 
+				// before we screw with it
+				context.save(); 
+			 
+				// move to the middle of where we want to draw our image
+				context.translate(x, y);
+			 
+				// rotate around that point, converting our 
+				// angle from degrees to radians 
+				context.rotate(angle * TO_RADIANS);
+			 
+				// draw it up and to the left by half the width
+				// and height of the image 
+				context.drawImage(image, -(image.width/2), -(image.height/2));
+			 
+				// and restore the co-ords to how they were when we began
+				context.restore(); 
+			}
+
+			function roundedRect(ctx,x,y,width,height,radius){
+				ctx.beginPath();
+				ctx.moveTo(x,y+radius);
+				ctx.lineTo(x,y+height-radius);
+				ctx.quadraticCurveTo(x,y+height,x+radius,y+height);
+				ctx.lineTo(x+width-radius,y+height);
+				ctx.quadraticCurveTo(x+width,y+height,x+width,y+height-radius);
+				ctx.lineTo(x+width,y+radius);
+				ctx.quadraticCurveTo(x+width,y,x+width-radius,y);
+				ctx.lineTo(x+radius,y);
+				ctx.quadraticCurveTo(x,y,x,y+radius);
+				ctx.stroke();
+				ctx.closePath();
+			}	
+		}
+	</script>
+</head>
+
+<body onload="draw();">
+	<canvas id="canvas" width="200" height="200"></canvas>
+</body>
+</html>
